@@ -32,28 +32,31 @@ export default function LoginPage() {
       if (error) throw error
 
       // Get user profile to determine redirect
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single()
+      const { data: user } = await supabase.auth.getUser()
+      if (user.user) {
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("role")
+          .eq("user_id", user.user.id)
+          .single()
 
-      // Redirect based on role
-      switch (profile?.role) {
-        case "customer":
-          router.push("/customer")
-          break
-        case "driver":
-          router.push("/driver")
-          break
-        case "courier_admin":
-          router.push("/courier-admin")
-          break
-        case "super_admin":
-          router.push("/super-admin")
-          break
-        default:
-          router.push("/customer")
+        // Redirect based on role
+        switch (profile?.role) {
+          case "customer":
+            router.push("/customer")
+            break
+          case "driver":
+            router.push("/driver")
+            break
+          case "courier_admin":
+            router.push("/courier-admin")
+            break
+          case "super_admin":
+            router.push("/super-admin")
+            break
+          default:
+            router.push("/customer")
+        }
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")

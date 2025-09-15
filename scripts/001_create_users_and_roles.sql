@@ -118,7 +118,7 @@ CREATE POLICY "Users can update their own profile" ON public.profiles
 CREATE POLICY "Super admins can view all profiles" ON public.profiles
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM public.profiles 
+      SELECT 1 FROM public.user_profiles 
       WHERE user_id = auth.uid() AND role = 'super_admin'
     )
   );
@@ -133,8 +133,8 @@ CREATE POLICY "Drivers can view assigned packages" ON public.packages
 CREATE POLICY "Courier admins can view company packages" ON public.packages
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() 
+      SELECT 1 FROM public.user_profiles 
+      WHERE user_id = auth.uid() 
       AND role = 'courier_admin' 
       AND company_id = packages.courier_company_id
     )
@@ -143,8 +143,8 @@ CREATE POLICY "Courier admins can view company packages" ON public.packages
 CREATE POLICY "Super admins can view all packages" ON public.packages
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() AND role = 'super_admin'
+      SELECT 1 FROM public.user_profiles 
+      WHERE user_id = auth.uid() AND role = 'super_admin'
     )
   );
 

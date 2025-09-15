@@ -33,7 +33,6 @@ export default function RegisterPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: fullName,
             phone: phone,
@@ -49,13 +48,23 @@ export default function RegisterPage() {
       
       if (data?.user) {
         console.log("User created successfully:", data.user.id)
-        // Check if email confirmation is required
-        if (data.user.email_confirmed_at) {
-          // User is immediately confirmed, redirect to dashboard
-          router.push(`/${role}`)
-        } else {
-          // Email confirmation required
-          router.push("/auth/verify-email")
+        
+        // Wait a moment for the trigger to create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Redirect based on role
+        switch (role) {
+          case "driver":
+            router.push("/driver")
+            break
+          case "courier_admin":
+            router.push("/courier-admin")
+            break
+          case "super_admin":
+            router.push("/super-admin")
+            break
+          default:
+            router.push("/customer")
         }
       } else {
         throw new Error("Failed to create user account")
