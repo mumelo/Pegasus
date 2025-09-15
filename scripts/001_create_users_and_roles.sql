@@ -2,8 +2,23 @@
 CREATE TYPE user_role AS ENUM ('customer', 'driver', 'courier_admin', 'super_admin');
 
 -- Create user profiles table
-CREATE TABLE IF NOT EXISTS public.profiles (
+CREATE TABLE IF NOT EXISTS public.user_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  full_name TEXT NOT NULL,
+  phone TEXT,
+  role user_role NOT NULL DEFAULT 'customer',
+  company_id UUID REFERENCES public.courier_companies(id),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create profiles table as an alias/view for backward compatibility
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   full_name TEXT NOT NULL,
   phone TEXT,
@@ -71,24 +86,40 @@ CREATE TABLE IF NOT EXISTS public.payments (
 );
 
 -- Enable RLS on all tables
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courier_companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.package_tracking ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for profiles
+-- RLS Policies for user_profiles
+CREATE POLICY "Users can view their own profile" ON public.user_profiles
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own profile" ON public.user_profiles
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Super admins can view all profiles" ON public.user_profiles
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.user_profiles 
+      WHERE user_id = auth.uid() AND role = 'super_admin'
+    )
+  );
+
+-- RLS Policies for profiles (backward compatibility)
 CREATE POLICY "Users can view their own profile" ON public.profiles
-  FOR SELECT USING (auth.uid() = id);
+  FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own profile" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Super admins can view all profiles" ON public.profiles
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() AND role = 'super_admin'
+      WHERE user_id = auth.uid() AND role = 'super_admin'
     )
   );
 
@@ -135,13 +166,27 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, role)
+  -- Insert into user_profiles table
+  INSERT INTO public.user_profiles (id, user_id, email, full_name, phone, role)
+  VALUES (
+    NEW.id,
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data ->> 'full_name', 'User'),
+    NEW.raw_user_meta_data ->> 'phone',
+    COALESCE((NEW.raw_user_meta_data ->> 'role')::user_role, 'customer')
+  );
+  
+  -- Also insert into profiles table for backward compatibility
+  INSERT INTO public.profiles (user_id, email, full_name, phone, role)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data ->> 'full_name', 'User'),
+    NEW.raw_user_meta_data ->> 'phone',
     COALESCE((NEW.raw_user_meta_data ->> 'role')::user_role, 'customer')
   );
+  
   RETURN NEW;
 END;
 $$;

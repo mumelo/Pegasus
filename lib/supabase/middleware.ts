@@ -31,7 +31,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  const publicRoutes = ["/", "/auth/login", "/auth/register", "/auth/verify-email", "/auth/error"]
+  const publicRoutes = ["/", "/auth/login", "/auth/register", "/auth/verify-email", "/auth/callback", "/auth/error"]
   const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route))
 
   // If no user and trying to access protected route, redirect to login

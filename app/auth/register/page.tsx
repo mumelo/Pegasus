@@ -29,11 +29,11 @@ export default function RegisterPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/login`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: fullName,
             phone: phone,
@@ -41,10 +41,28 @@ export default function RegisterPage() {
           },
         },
       })
-      if (error) throw error
-      router.push("/auth/verify-email")
+      
+      if (error) {
+        console.error("Registration error:", error)
+        throw error
+      }
+      
+      if (data?.user) {
+        console.log("User created successfully:", data.user.id)
+        // Check if email confirmation is required
+        if (data.user.email_confirmed_at) {
+          // User is immediately confirmed, redirect to dashboard
+          router.push(`/${role}`)
+        } else {
+          // Email confirmation required
+          router.push("/auth/verify-email")
+        }
+      } else {
+        throw new Error("Failed to create user account")
+      }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      console.error("Registration failed:", error)
+      setError(error instanceof Error ? error.message : "An error occurred during registration")
     } finally {
       setIsLoading(false)
     }
