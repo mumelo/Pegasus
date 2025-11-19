@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,12 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { useState } from "react"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [role, setRole] = useState("customer")
@@ -24,12 +24,25 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
+    if (password !== passwordConfirm) {
+      setError("Passwords do not match")
+      setIsLoading(false)
+      return
+    }
+
+    if (!fullName.trim()) {
+      setError("Full name is required")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const supabase = createClient()
+      
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -38,39 +51,18 @@ export default function RegisterPage() {
             phone: phone,
             role: role,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
-      
-      if (error) {
-        console.error("Registration error:", error)
-        throw error
+
+      if (signUpError) throw signUpError
+
+      if (!data.user) {
+        throw new Error("Registration failed")
       }
-      
-      if (data?.user) {
-        console.log("User created successfully:", data.user.id)
-        
-        // Wait a moment for the trigger to create the profile
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Redirect based on role
-        switch (role) {
-          case "driver":
-            router.push("/driver")
-            break
-          case "courier_admin":
-            router.push("/courier-admin")
-            break
-          case "super_admin":
-            router.push("/super-admin")
-            break
-          default:
-            router.push("/customer")
-        }
-      } else {
-        throw new Error("Failed to create user account")
-      }
+
+      router.push("/auth/verify-email")
     } catch (error: unknown) {
-      console.error("Registration failed:", error)
       setError(error instanceof Error ? error.message : "An error occurred during registration")
     } finally {
       setIsLoading(false)
@@ -82,7 +74,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">Join LogiTrack</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">Join Pegasus</CardTitle>
             <CardDescription className="text-gray-600">Create your logistics account</CardDescription>
           </CardHeader>
           <CardContent>
@@ -141,6 +133,17 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passwordConfirm">Confirm Password</Label>
+                <Input
+                  id="passwordConfirm"
+                  type="password"
+                  placeholder="Confirm your password"
+                  required
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
                 />
               </div>
               {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>}

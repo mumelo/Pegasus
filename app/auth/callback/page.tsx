@@ -1,13 +1,12 @@
 "use client"
 
 import { createClient } from "@/lib/supabase/client"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,76 +15,51 @@ export default function AuthCallbackPage() {
       const supabase = createClient()
       
       try {
-        // Get the code from URL parameters
-        const code = searchParams.get('code')
+        const { data, error } = await supabase.auth.getSession()
         
-        if (code) {
-          // Exchange the code for a session
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-          
-          if (error) {
-            console.error("Auth callback error:", error)
-            setError(error.message)
-            return
-          }
+        if (error) {
+          console.error("Auth callback error:", error)
+          setError(error.message)
+          return
+        }
 
-          if (data.session?.user) {
-            console.log("User authenticated:", data.session.user.id)
-            
-            // Wait a moment for the trigger to create the profile
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            
-            // Get user profile to determine role
+        if (data.session?.user) {
+          // Get user profile to determine role
+          try {
             const { data: profile, error: profileError } = await supabase
-              .from("user_profiles")
+              .from("profiles")
               .select("role")
               .eq("user_id", data.session.user.id)
               .single()
 
             if (profileError) {
               console.error("Profile fetch error:", profileError)
-              // Try the profiles table as fallback
-              const { data: fallbackProfile, error: fallbackError } = await supabase
-                .from("profiles")
-                .select("role")
-                .eq("user_id", data.session.user.id)
-                .single()
-              
-              if (fallbackError) {
-                console.error("Fallback profile fetch error:", fallbackError)
-                // Default to customer if profile not found
-                router.push("/customer")
-                return
-              }
-              
-              // Use fallback profile
-              redirectBasedOnRole(fallbackProfile?.role)
+              // Default to customer if profile not found or RLS error occurs
+              router.push("/customer")
               return
             }
 
             // Redirect based on role
-            redirectBasedOnRole(profile?.role)
-          } else {
-            console.log("No session found, redirecting to login")
-            router.push("/auth/login")
+            switch (profile?.role) {
+              case "driver":
+                router.push("/driver")
+                break
+              case "courier_admin":
+                router.push("/courier-admin")
+                break
+              case "super_admin":
+                router.push("/super-admin")
+                break
+              default:
+                router.push("/customer")
+            }
+          } catch (rlsError) {
+            console.error("RLS recursion error:", rlsError)
+            // Default to customer if RLS recursion error occurs
+            router.push("/customer")
           }
         } else {
-          // No code parameter, check for existing session
-          const { data, error } = await supabase.auth.getSession()
-          
-          if (error || !data.session) {
-            router.push("/auth/login")
-            return
-          }
-          
-          // User already has session, redirect to appropriate dashboard
-          const { data: profile } = await supabase
-            .from("user_profiles")
-            .select("role")
-            .eq("user_id", data.session.user.id)
-            .single()
-            
-          redirectBasedOnRole(profile?.role)
+          router.push("/auth/login")
         }
       } catch (error) {
         console.error("Callback handling error:", error)
@@ -95,24 +69,8 @@ export default function AuthCallbackPage() {
       }
     }
 
-    const redirectBasedOnRole = (role: string | undefined) => {
-      switch (role) {
-        case "driver":
-          router.push("/driver")
-          break
-        case "courier_admin":
-          router.push("/courier-admin")
-          break
-        case "super_admin":
-          router.push("/super-admin")
-          break
-        default:
-          router.push("/customer")
-      }
-    }
-
     handleAuthCallback()
-  }, [router, searchParams])
+  }, [router])
 
   if (loading) {
     return (

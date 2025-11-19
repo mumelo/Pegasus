@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { PaymentForm } from "@/components/payment/payment-form"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface SendPackageFormProps {
   onClose: () => void
@@ -35,14 +36,15 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
   const [step, setStep] = useState<"details" | "payment">("details")
   const [packageData, setPackageData] = useState<any>(null)
   const [deliveryFee, setDeliveryFee] = useState(0)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("card")
 
   const supabase = createClient()
 
   const calculateDeliveryFee = () => {
-    const baseRate = 10
-    const weightRate = Number.parseFloat(formData.weight) * 2
+    const baseRate = 200 // 200 KES base rate
+    const weightRate = Number.parseFloat(formData.weight) * 100 // 100 KES per kg
     const typeMultiplier = formData.packageType === "express" ? 1.5 : 1
-    return (baseRate + weightRate) * typeMultiplier
+    return Math.round((baseRate + weightRate) * typeMultiplier)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,10 +53,8 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
     setError(null)
 
     try {
-      // Generate tracking number
-      const trackingNumber = `LT${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+      const trackingNumber = `PEG${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`
 
-      // Calculate delivery fee
       const fee = calculateDeliveryFee()
       setDeliveryFee(fee)
 
@@ -86,20 +86,19 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
     try {
       setLoading(true)
 
-      // Create package with payment information
       const { data: packageResult, error: packageError } = await supabase
         .from("packages")
         .insert({
           ...packageData,
           payment_status: "paid",
           payment_id: paymentId,
+          payment_method: selectedPaymentMethod,
         })
         .select()
         .single()
 
       if (packageError) throw packageError
 
-      // Add initial tracking entry
       await supabase.from("package_tracking").insert({
         package_id: packageResult.id,
         status: "pending",
@@ -107,14 +106,13 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
         notes: "Package created and payment confirmed. Awaiting pickup",
       })
 
-      // Process payment via API
       await fetch("/api/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           packageId: packageResult.id,
           amount: deliveryFee,
-          paymentMethod: "card",
+          paymentMethod: selectedPaymentMethod,
         }),
       })
 
@@ -138,6 +136,8 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
             amount={deliveryFee}
             onPaymentSuccess={handlePaymentSuccess}
             onCancel={() => setStep("details")}
+            selectedPaymentMethod={selectedPaymentMethod}
+            setSelectedPaymentMethod={setSelectedPaymentMethod}
           />
         </div>
       </div>
@@ -160,7 +160,6 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Recipient Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Recipient Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -188,6 +187,7 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
                 <Label htmlFor="recipientAddress">Delivery Address</Label>
                 <Textarea
                   id="recipientAddress"
+                  placeholder="e.g., 123 Westlands, Nairobi"
                   required
                   value={formData.recipientAddress}
                   onChange={(e) => handleInputChange("recipientAddress", e.target.value)}
@@ -195,13 +195,13 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
               </div>
             </div>
 
-            {/* Pickup Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Pickup Information</h3>
               <div className="space-y-2">
                 <Label htmlFor="pickupAddress">Pickup Address</Label>
                 <Textarea
                   id="pickupAddress"
+                  placeholder="e.g., 789 Kilimani, Nairobi"
                   required
                   value={formData.pickupAddress}
                   onChange={(e) => handleInputChange("pickupAddress", e.target.value)}
@@ -209,7 +209,6 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
               </div>
             </div>
 
-            {/* Package Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Package Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -253,7 +252,7 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="declaredValue">Declared Value ($)</Label>
+                  <Label htmlFor="declaredValue">Declared Value (KES)</Label>
                   <Input
                     id="declaredValue"
                     type="number"
@@ -266,12 +265,13 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
               </div>
             </div>
 
-            {/* Delivery fee preview */}
             {formData.weight && formData.packageType && (
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Estimated Delivery Fee:</span>
-                  <span className="text-xl font-bold text-blue-600">${calculateDeliveryFee().toFixed(2)}</span>
+                  <span className="text-xl font-bold text-blue-600">
+                    {formatCurrencySimple(calculateDeliveryFee())}
+                  </span>
                 </div>
               </div>
             )}

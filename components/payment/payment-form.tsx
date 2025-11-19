@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CreditCard, Lock } from "lucide-react"
+import { CreditCard, Lock, Smartphone } from "lucide-react"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface PaymentFormProps {
   amount: number
@@ -24,7 +25,6 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
     e.preventDefault()
     setIsProcessing(true)
 
-    // Simulate payment processing
     setTimeout(() => {
       const paymentId = `pay_${Date.now()}`
       onPaymentSuccess(paymentId)
@@ -39,7 +39,7 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
           <CreditCard className="h-5 w-5" />
           Payment Details
         </CardTitle>
-        <CardDescription>Complete your payment of ${amount.toFixed(2)}</CardDescription>
+        <CardDescription>Complete your payment of {formatCurrencySimple(amount)}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -53,6 +53,7 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
                 <SelectItem value="card">Credit/Debit Card</SelectItem>
                 <SelectItem value="paypal">PayPal</SelectItem>
                 <SelectItem value="bank">Bank Transfer</SelectItem>
+                <SelectItem value="mpesa">M-Pesa</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -80,6 +81,25 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
             </>
           )}
 
+          {paymentMethod === "mpesa" && (
+            <div className="space-y-2">
+              <Label htmlFor="mpesa-phone" className="flex items-center gap-2">
+                <Smartphone className="h-4 w-4" />
+                M-Pesa Phone Number
+              </Label>
+              <Input
+                id="mpesa-phone"
+                placeholder="254712345678"
+                pattern="^254[0-9]{9}$"
+                required
+                title="Enter phone number in format: 254712345678"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your M-Pesa registered phone number (format: 254xxxxxxxxx)
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Lock className="h-4 w-4" />
             Your payment information is secure and encrypted
@@ -96,7 +116,7 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
               Cancel
             </Button>
             <Button type="submit" disabled={isProcessing} className="flex-1">
-              {isProcessing ? "Processing..." : `Pay $${amount.toFixed(2)}`}
+              {isProcessing ? "Processing..." : `Pay ${formatCurrencySimple(amount)}`}
             </Button>
           </div>
         </form>

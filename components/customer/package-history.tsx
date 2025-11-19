@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, Calendar, DollarSign } from "lucide-react"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface PackageHistoryProps {
   packages: any[]
@@ -63,7 +64,7 @@ export function PackageHistory({ packages }: PackageHistoryProps) {
                   </div>
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-4 w-4 text-gray-500" />
-                    <span className="text-gray-600">Fee: ${pkg.delivery_fee}</span>
+                    <span className="text-gray-600">Fee: {formatCurrencySimple(pkg.delivery_fee)}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Package className="h-4 w-4 text-gray-500" />

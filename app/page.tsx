@@ -12,7 +12,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-2">
               <Package className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">LogiTrack</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Pegasus</h1>
             </div>
             <div className="flex space-x-4">
               <Button asChild variant="outline">
@@ -85,7 +85,7 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="text-2xl">Ready to Get Started?</CardTitle>
               <CardDescription className="text-blue-100">
-                Join thousands of businesses using LogiTrack for their logistics needs
+                Join thousands of businesses using Pegasus for their logistics needs
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -1,28 +1,51 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
 import { CustomerDashboard } from "@/components/customer/customer-dashboard"
+import { SimulatedAuth } from "@/lib/auth/simulated-auth"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
-export default async function CustomerPage() {
-  const supabase = await createClient()
+export default function CustomerPage() {
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
-  }
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = SimulatedAuth.getUser()
 
-  // Verify user role - make this more lenient to avoid redirect loops
-  const { data: profile, error: profileError } = await supabase.from("user_profiles").select("role, full_name").eq("user_id", data.user.id).single()
+        if (!currentUser) {
+          router.push("/auth/login")
+          return
+        }
 
-  // If profile doesn't exist or has error, create a default customer profile
-  if (profileError || !profile) {
-    console.log("Profile not found, creating default customer profile")
-    const defaultProfile = {
-      role: "customer" as const,
-      full_name: data.user.email?.split('@')[0] || "Customer"
+        if (currentUser.role !== "customer") {
+          router.push("/auth/login")
+          return
+        }
+
+        setUser(currentUser)
+        setProfile(currentUser)
+      } catch (error) {
+        console.error("[v0] CustomerPage: Error during authentication:", error)
+        router.push("/auth/login")
+      } finally {
+        setIsLoading(false)
+      }
     }
-    return <CustomerDashboard user={data.user} profile={defaultProfile} />
+
+    checkAuth()
+  }, [router])
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  // Allow any authenticated user to access customer dashboard
-  return <CustomerDashboard user={data.user} profile={profile} />
+  if (!user) {
+    return null
+  }
+
+  return <CustomerDashboard user={user} profile={profile} />
 }

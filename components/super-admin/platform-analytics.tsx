@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { BarChart3, TrendingUp, Users, Building2, Package, DollarSign } from "lucide-react"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface PlatformAnalyticsProps {
   users: any[]
@@ -11,7 +12,6 @@ interface PlatformAnalyticsProps {
 }
 
 export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyticsProps) {
-  // Calculate platform metrics
   const totalUsers = users.length
   const activeUsers = users.filter((user) => user.is_active).length
   const totalCompanies = companies.length
@@ -22,19 +22,16 @@ export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyt
     .filter((pkg) => pkg.status === "delivered")
     .reduce((sum, pkg) => sum + pkg.delivery_fee, 0)
 
-  // User role distribution
   const userRoles = users.reduce((acc, user) => {
     acc[user.role] = (acc[user.role] || 0) + 1
     return acc
   }, {})
 
-  // Package status distribution
   const packageStatuses = packages.reduce((acc, pkg) => {
     acc[pkg.status] = (acc[pkg.status] || 0) + 1
     return acc
   }, {})
 
-  // Monthly growth data (last 6 months)
   const monthlyData = []
   for (let i = 5; i >= 0; i--) {
     const date = new Date()
@@ -71,7 +68,6 @@ export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyt
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -89,7 +85,7 @@ export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyt
             <DollarSign className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">${averageOrderValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrencySimple(averageOrderValue)}</div>
             <p className="text-xs text-muted-foreground">per delivered package</p>
           </CardContent>
         </Card>
@@ -115,7 +111,6 @@ export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyt
         </Card>
       </div>
 
-      {/* User Role Distribution */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -137,7 +132,6 @@ export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyt
         </CardContent>
       </Card>
 
-      {/* Package Status Distribution */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -168,7 +162,6 @@ export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyt
         </CardContent>
       </Card>
 
-      {/* Monthly Growth */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -192,7 +185,7 @@ export function PlatformAnalytics({ users, companies, packages }: PlatformAnalyt
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">Revenue</p>
-                    <p className="font-medium text-green-600">${month.revenue.toFixed(2)}</p>
+                    <p className="font-medium text-green-600">{formatCurrencySimple(month.revenue)}</p>
                   </div>
                 </div>
               </div>

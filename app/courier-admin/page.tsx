@@ -1,25 +1,50 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
 import { CourierAdminDashboard } from "@/components/courier-admin/courier-admin-dashboard"
+import { SimulatedAuth } from "@/lib/auth/simulated-auth"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
-export default async function CourierAdminPage() {
-  const supabase = await createClient()
+export default function CourierAdminPage() {
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = SimulatedAuth.getUser()
+
+        if (!currentUser) {
+          router.push("/auth/login")
+          return
+        }
+
+        if (currentUser.role !== "courier_admin") {
+          router.push("/auth/login")
+          return
+        }
+
+        setUser(currentUser)
+        setProfile(currentUser)
+      } catch (error) {
+        console.error("[v0] CourierAdminPage: Error during authentication:", error)
+        router.push("/auth/login")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  // Verify user role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, full_name, company_id")
-    .eq("id", data.user.id)
-    .single()
-
-  if (!profile || profile.role !== "courier_admin") {
-    redirect("/auth/login")
+  if (!user) {
+    return null
   }
 
-  return <CourierAdminDashboard user={data.user} profile={profile} />
+  return <CourierAdminDashboard user={user} profile={profile} />
 }

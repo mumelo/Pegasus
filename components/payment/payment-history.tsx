@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CreditCard, Download, Search } from "lucide-react"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface Payment {
   id: string
@@ -22,34 +23,42 @@ export function PaymentHistory() {
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
-    // Simulate fetching payment history
     const mockPayments: Payment[] = [
       {
         id: "pay_001",
-        amount: 25.99,
+        amount: 1750,
         status: "completed",
         method: "Credit Card",
         date: "2024-01-15",
-        description: "Package delivery to New York",
+        description: "Package delivery to Nairobi",
         packageId: "PKG001",
       },
       {
         id: "pay_002",
-        amount: 18.5,
+        amount: 1200,
         status: "completed",
         method: "PayPal",
         date: "2024-01-10",
-        description: "Express delivery to Los Angeles",
+        description: "Express delivery to Mombasa",
         packageId: "PKG002",
       },
       {
         id: "pay_003",
-        amount: 32.75,
+        amount: 2150,
         status: "pending",
         method: "Bank Transfer",
         date: "2024-01-08",
-        description: "International shipping to Canada",
+        description: "International shipping to Kisumu",
         packageId: "PKG003",
+      },
+      {
+        id: "pay_004",
+        amount: 950,
+        status: "completed",
+        method: "M-Pesa",
+        date: "2024-01-05",
+        description: "Same-day delivery to Nakuru",
+        packageId: "PKG004",
       },
     ]
     setPayments(mockPayments)
@@ -115,7 +124,7 @@ export function PaymentHistory() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-semibold text-lg">${payment.amount.toFixed(2)}</div>
+                <div className="font-semibold text-lg">{formatCurrencySimple(payment.amount)}</div>
                 <Button variant="ghost" size="sm">
                   View Details
                 </Button>

@@ -92,7 +92,7 @@ export function CourierAdminDashboard({ user, profile }: CourierAdminDashboardPr
             <div className="flex items-center space-x-3">
               <Building2 className="h-8 w-8 text-purple-600" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">LogiTrack</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Pegasus</h1>
                 <p className="text-sm text-gray-600">Courier Admin Dashboard</p>
               </div>
             </div>

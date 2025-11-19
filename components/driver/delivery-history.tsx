@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, Calendar, MapPin, CheckCircle } from "lucide-react"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface DeliveryHistoryProps {
   packages: any[]
@@ -27,11 +28,10 @@ export function DeliveryHistory({ packages }: DeliveryHistoryProps) {
   }
 
   const completedPackages = packages.filter((pkg) => pkg.status === "delivered")
-  const totalEarnings = completedPackages.reduce((sum, pkg) => sum + pkg.delivery_fee * 0.1, 0) // Assuming 10% commission
+  const totalEarnings = completedPackages.reduce((sum, pkg) => sum + pkg.delivery_fee * 0.1, 0)
 
   return (
     <div className="space-y-6">
-      {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -57,12 +57,11 @@ export function DeliveryHistory({ packages }: DeliveryHistoryProps) {
             <Package className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">${totalEarnings.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrencySimple(totalEarnings)}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Delivery History */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -103,7 +102,7 @@ export function DeliveryHistory({ packages }: DeliveryHistoryProps) {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Package className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-600">Fee: ${pkg.delivery_fee}</span>
+                      <span className="text-gray-600">Fee: {formatCurrencySimple(pkg.delivery_fee)}</span>
                     </div>
                   </div>
 

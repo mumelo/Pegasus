@@ -102,7 +102,7 @@ export function SuperAdminDashboard({ user, profile }: SuperAdminDashboardProps)
             <div className="flex items-center space-x-3">
               <Shield className="h-8 w-8 text-red-600" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">LogiTrack</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Pegasus</h1>
                 <p className="text-sm text-gray-600">Super Admin Dashboard</p>
               </div>
             </div>

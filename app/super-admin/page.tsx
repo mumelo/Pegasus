@@ -1,21 +1,50 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
 import { SuperAdminDashboard } from "@/components/super-admin/super-admin-dashboard"
+import { SimulatedAuth } from "@/lib/auth/simulated-auth"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
-export default async function SuperAdminPage() {
-  const supabase = await createClient()
+export default function SuperAdminPage() {
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = SimulatedAuth.getUser()
+
+        if (!currentUser) {
+          router.push("/auth/login")
+          return
+        }
+
+        if (currentUser.role !== "super_admin") {
+          router.push("/auth/login")
+          return
+        }
+
+        setUser(currentUser)
+        setProfile(currentUser)
+      } catch (error) {
+        console.error("[v0] SuperAdminPage: Error during authentication:", error)
+        router.push("/auth/login")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  // Verify user role
-  const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", data.user.id).single()
-
-  if (!profile || profile.role !== "super_admin") {
-    redirect("/auth/login")
+  if (!user) {
+    return null
   }
 
-  return <SuperAdminDashboard user={data.user} profile={profile} />
+  return <SuperAdminDashboard user={user} profile={profile} />
 }
