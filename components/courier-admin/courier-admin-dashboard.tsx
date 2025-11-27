@@ -9,6 +9,7 @@ import { Building2, LogOut, User, Package, Users, TrendingUp } from "lucide-reac
 import { PackageManagement } from "./package-management"
 import { DriverManagement } from "./driver-management"
 import { CompanyAnalytics } from "./company-analytics"
+import { NotificationSystem } from "@/components/real-time/notification-system"
 import { useRouter } from "next/navigation"
 
 interface CourierAdminDashboardProps {
@@ -97,10 +98,16 @@ export function CourierAdminDashboard({ user, profile }: CourierAdminDashboardPr
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <NotificationSystem userId={user.id} userRole={profile.role} />
               <div className="text-right">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-gray-500" />
                   <span className="text-sm font-medium text-gray-700">{profile.full_name}</span>
+                  {profile.role && (
+                    <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full capitalize">
+                      {profile.role.replace("_", " ")}
+                    </span>
+                  )}
                 </div>
                 {company && <p className="text-xs text-gray-500">{company.name}</p>}
               </div>

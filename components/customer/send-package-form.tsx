@@ -39,8 +39,8 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
   const supabase = createClient()
 
   const calculateDeliveryFee = () => {
-    const baseRate = 10
-    const weightRate = Number.parseFloat(formData.weight) * 2
+    const baseRate = 150
+    const weightRate = Number.parseFloat(formData.weight) * 40
     const typeMultiplier = formData.packageType === "express" ? 1.5 : 1
     return (baseRate + weightRate) * typeMultiplier
   }
@@ -82,7 +82,7 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
     }
   }
 
-  const handlePaymentSuccess = async (paymentId: string) => {
+  const handlePaymentSuccess = async (paymentId: string, paymentMethod: "mpesa" | "cod") => {
     try {
       setLoading(true)
 
@@ -91,8 +91,8 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
         .from("packages")
         .insert({
           ...packageData,
-          payment_status: "paid",
-          payment_id: paymentId,
+          payment_status: paymentMethod === "cod" ? "pending" : "paid",
+          payment_id: paymentMethod === "cod" ? null : paymentId,
         })
         .select()
         .single()
@@ -107,16 +107,18 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
         notes: "Package created and payment confirmed. Awaiting pickup",
       })
 
-      // Process payment via API
-      await fetch("/api/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageId: packageResult.id,
-          amount: deliveryFee,
-          paymentMethod: "card",
-        }),
-      })
+      // Process payment via API for M-Pesa payments only
+      if (paymentMethod === "mpesa") {
+        await fetch("/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            packageId: packageResult.id,
+            amount: deliveryFee,
+            paymentMethod: "mpesa",
+          }),
+        })
+      }
 
       onSuccess()
     } catch (error: any) {
@@ -253,7 +255,7 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="declaredValue">Declared Value ($)</Label>
+                  <Label htmlFor="declaredValue">Declared Value (Ksh)</Label>
                   <Input
                     id="declaredValue"
                     type="number"
@@ -271,7 +273,7 @@ export function SendPackageForm({ onClose, onSuccess, userId }: SendPackageFormP
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Estimated Delivery Fee:</span>
-                  <span className="text-xl font-bold text-blue-600">${calculateDeliveryFee().toFixed(2)}</span>
+                  <span className="text-xl font-bold text-blue-600">Ksh {calculateDeliveryFee().toFixed(0)}</span>
                 </div>
               </div>
             )}

@@ -12,9 +12,9 @@ export default async function DriverPage() {
 
   // Verify user role
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("role, full_name, company_id")
-    .eq("id", data.user.id)
+    .eq("user_id", data.user.id)
     .single()
 
   if (!profile || profile.role !== "driver") {

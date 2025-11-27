@@ -11,7 +11,11 @@ export default async function SuperAdminPage() {
   }
 
   // Verify user role
-  const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", data.user.id).single()
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("role, full_name")
+    .eq("user_id", data.user.id)
+    .single()
 
   if (!profile || profile.role !== "super_admin") {
     redirect("/auth/login")

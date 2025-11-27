@@ -31,20 +31,15 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      // Get user profile to determine redirect
-      const { data: user } = await supabase.auth.getUser()
-      if (user.user) {
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("role")
-          .eq("user_id", user.user.id)
-          .single()
+      // Get user session to determine redirect from user metadata
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-        // Redirect based on role
-        switch (profile?.role) {
-          case "customer":
-            router.push("/customer")
-            break
+      if (user) {
+        const metadataRole = (user.user_metadata as any)?.role as string | undefined
+
+        switch (metadataRole) {
           case "driver":
             router.push("/driver")
             break

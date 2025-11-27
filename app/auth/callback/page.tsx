@@ -31,11 +31,17 @@ export default function AuthCallbackPage() {
 
           if (data.session?.user) {
             console.log("User authenticated:", data.session.user.id)
-            
-            // Wait a moment for the trigger to create the profile
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            
-            // Get user profile to determine role
+
+            // Prefer role from user metadata (set at registration)
+            const metadataRole = (data.session.user.user_metadata as any)?.role as string | undefined
+            if (metadataRole) {
+              redirectBasedOnRole(metadataRole)
+              return
+            }
+
+            // Fallback: wait and try loading role from user_profiles
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+
             const { data: profile, error: profileError } = await supabase
               .from("user_profiles")
               .select("role")
@@ -50,20 +56,20 @@ export default function AuthCallbackPage() {
                 .select("role")
                 .eq("user_id", data.session.user.id)
                 .single()
-              
+
               if (fallbackError) {
                 console.error("Fallback profile fetch error:", fallbackError)
                 // Default to customer if profile not found
                 router.push("/customer")
                 return
               }
-              
+
               // Use fallback profile
               redirectBasedOnRole(fallbackProfile?.role)
               return
             }
 
-            // Redirect based on role
+            // Redirect based on role from profile
             redirectBasedOnRole(profile?.role)
           } else {
             console.log("No session found, redirecting to login")

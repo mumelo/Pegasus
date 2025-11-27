@@ -12,13 +12,14 @@ import { CreditCard, Lock } from "lucide-react"
 
 interface PaymentFormProps {
   amount: number
-  onPaymentSuccess: (paymentId: string) => void
+  onPaymentSuccess: (paymentId: string, paymentMethod: "mpesa" | "cod") => void
   onCancel: () => void
 }
 
 export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState("card")
+  const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "cod">("mpesa")
+  const [mpesaPhone, setMpesaPhone] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,7 +28,7 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
     // Simulate payment processing
     setTimeout(() => {
       const paymentId = `pay_${Date.now()}`
-      onPaymentSuccess(paymentId)
+      onPaymentSuccess(paymentId, paymentMethod)
       setIsProcessing(false)
     }, 2000)
   }
@@ -39,45 +40,35 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
           <CreditCard className="h-5 w-5" />
           Payment Details
         </CardTitle>
-        <CardDescription>Complete your payment of ${amount.toFixed(2)}</CardDescription>
+        <CardDescription>Complete your payment of Ksh {amount.toFixed(0)}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="payment-method">Payment Method</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+            <Select value={paymentMethod} onValueChange={(value: "mpesa" | "cod") => setPaymentMethod(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="card">Credit/Debit Card</SelectItem>
-                <SelectItem value="paypal">PayPal</SelectItem>
-                <SelectItem value="bank">Bank Transfer</SelectItem>
+                <SelectItem value="mpesa">M-Pesa</SelectItem>
+                <SelectItem value="cod">Cash on Delivery</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {paymentMethod === "card" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="card-number">Card Number</Label>
-                <Input id="card-number" placeholder="1234 5678 9012 3456" required />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="expiry">Expiry Date</Label>
-                  <Input id="expiry" placeholder="MM/YY" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cvv">CVV</Label>
-                  <Input id="cvv" placeholder="123" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cardholder">Cardholder Name</Label>
-                <Input id="cardholder" placeholder="John Doe" required />
-              </div>
-            </>
+          {paymentMethod === "mpesa" && (
+            <div className="space-y-2">
+              <Label htmlFor="mpesa-phone">M-Pesa Phone Number</Label>
+              <Input
+                id="mpesa-phone"
+                type="tel"
+                placeholder="e.g. 0712345678"
+                required
+                value={mpesaPhone}
+                onChange={(e) => setMpesaPhone(e.target.value)}
+              />
+            </div>
           )}
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -96,7 +87,7 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
               Cancel
             </Button>
             <Button type="submit" disabled={isProcessing} className="flex-1">
-              {isProcessing ? "Processing..." : `Pay $${amount.toFixed(2)}`}
+              {isProcessing ? "Processing..." : `Pay Ksh ${amount.toFixed(0)}`}
             </Button>
           </div>
         </form>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Shield, LogOut, User, Package, Users, Building2, TrendingUp } from "lucide-react"
+import { NotificationSystem } from "@/components/real-time/notification-system"
 import { UserManagement } from "./user-management"
 import { CompanyManagement } from "./company-management"
 import { PlatformAnalytics } from "./platform-analytics"
@@ -107,6 +108,7 @@ export function SuperAdminDashboard({ user, profile }: SuperAdminDashboardProps)
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <NotificationSystem userId={user.id} userRole={profile.role} />
               <div className="flex items-center space-x-2">
                 <User className="h-5 w-5 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">{profile.full_name}</span>

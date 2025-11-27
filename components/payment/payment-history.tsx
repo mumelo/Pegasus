@@ -115,7 +115,7 @@ export function PaymentHistory() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-semibold text-lg">${payment.amount.toFixed(2)}</div>
+                <div className="font-semibold text-lg">Ksh {payment.amount.toFixed(0)}</div>
                 <Button variant="ghost" size="sm">
                   View Details
                 </Button>

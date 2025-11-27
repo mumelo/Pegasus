@@ -10,19 +10,36 @@ export default async function CustomerPage() {
     redirect("/auth/login")
   }
 
-  // Verify user role - make this more lenient to avoid redirect loops
-  const { data: profile, error: profileError } = await supabase.from("user_profiles").select("role, full_name").eq("user_id", data.user.id).single()
+  // Load profile and role from user_profiles
+  const { data: profile, error: profileError } = await supabase
+    .from("user_profiles")
+    .select("role, full_name")
+    .eq("user_id", data.user.id)
+    .single()
 
-  // If profile doesn't exist or has error, create a default customer profile
+  // If no profile, treat as customer with fallback name
   if (profileError || !profile) {
-    console.log("Profile not found, creating default customer profile")
     const defaultProfile = {
       role: "customer" as const,
-      full_name: data.user.email?.split('@')[0] || "Customer"
+      full_name: data.user.email?.split("@")[0] || "Customer",
     }
     return <CustomerDashboard user={data.user} profile={defaultProfile} />
   }
 
-  // Allow any authenticated user to access customer dashboard
+  // If user is not a customer, send them to their own portal
+  if (profile.role !== "customer") {
+    switch (profile.role) {
+      case "driver":
+        redirect("/driver")
+      case "courier_admin":
+        redirect("/courier-admin")
+      case "super_admin":
+        redirect("/super-admin")
+      default:
+        redirect("/customer")
+    }
+  }
+
+  // Customer: render customer dashboard
   return <CustomerDashboard user={data.user} profile={profile} />
 }

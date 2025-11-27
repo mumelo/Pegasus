@@ -1,4 +1,4 @@
-"use client"
+  "use client"
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -87,6 +87,11 @@ export function CustomerDashboard({ user, profile }: CustomerDashboardProps) {
               <div className="flex items-center space-x-2">
                 <User className="h-5 w-5 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">{profile.full_name}</span>
+                {profile.role && (
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full capitalize">
+                    {profile.role.replace("_", " ")}
+                  </span>
+                )}
               </div>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -193,7 +198,7 @@ export function CustomerDashboard({ user, profile }: CustomerDashboardProps) {
                           <Badge className={getStatusColor(pkg.status)}>
                             {pkg.status.replace("_", " ").toUpperCase()}
                           </Badge>
-                          <p className="text-sm font-medium text-gray-900">${pkg.delivery_fee}</p>
+                          <p className="text-sm font-medium text-gray-900">Ksh {pkg.delivery_fee}</p>
                         </div>
                       </div>
                     ))}
