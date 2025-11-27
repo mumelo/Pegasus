@@ -25,23 +25,13 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  const pathname = request.nextUrl.pathname
-  
-  // Skip middleware for static files and API routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.includes('.') ||
-    pathname === '/favicon.ico'
-  ) {
-    return supabaseResponse
-  }
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const publicRoutes = ["/", "/auth/login", "/auth/register", "/auth/error"]
+  const pathname = request.nextUrl.pathname
+
+  const publicRoutes = ["/", "/auth/login", "/auth/register", "/auth/verify-email", "/auth/callback", "/auth/error"]
   const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route))
 
   // If no user and trying to access protected route, redirect to login
@@ -51,12 +41,73 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is authenticated, handle dashboard routing
+  // If user is authenticated
   if (user) {
-    // Redirect authenticated users away from auth pages
-    if (pathname.startsWith("/auth/")) {
+    let userProfile = null
+    try {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single()
+
+      if (!error && profile) {
+        userProfile = profile
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error)
+      // Continue without profile - user will default to customer role
+    }
+
+    if (pathname.startsWith("/auth/") && pathname !== "/auth/verify-email") {
       const url = request.nextUrl.clone()
-      url.pathname = "/customer" // Default redirect for authenticated users
+
+      // Redirect based on user role or default to customer
+      switch (userProfile?.role) {
+        case "driver":
+          url.pathname = "/driver"
+          break
+        case "courier_admin":
+          url.pathname = "/courier-admin"
+          break
+        case "super_admin":
+          url.pathname = "/super-admin"
+          break
+        default:
+          url.pathname = "/customer"
+      }
+
+      return NextResponse.redirect(url)
+    }
+
+    if (userProfile?.role) {
+      const roleRoutes = {
+        customer: "/customer",
+        driver: "/driver",
+        courier_admin: "/courier-admin",
+        super_admin: "/super-admin",
+      }
+
+      const expectedRoute = roleRoutes[userProfile.role as keyof typeof roleRoutes]
+      const isDashboardRoute = Object.values(roleRoutes).some((route) => pathname.startsWith(route))
+
+      // Only redirect if user is accessing a dashboard route that doesn't match their role
+      if (isDashboardRoute && !pathname.startsWith(expectedRoute)) {
+        const url = request.nextUrl.clone()
+        url.pathname = expectedRoute
+        return NextResponse.redirect(url)
+      }
+    }
+
+    if (
+      !userProfile &&
+      (pathname.startsWith("/customer") ||
+        pathname.startsWith("/driver") ||
+        pathname.startsWith("/courier-admin") ||
+        pathname.startsWith("/super-admin"))
+    ) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/customer"
       return NextResponse.redirect(url)
     }
   }

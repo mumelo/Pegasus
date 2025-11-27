@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Package, Plus, LogOut, User } from "lucide-react"
+import { PackageOpenIcon,Package, Plus, LogOut, User } from "lucide-react"
 import { SendPackageForm } from "./send-package-form"
 import { PackageTracker } from "./package-tracker"
 import { PackageHistory } from "./package-history"
 import { PaymentHistory } from "@/components/payment/payment-history"
 import { NotificationSystem } from "@/components/real-time/notification-system"
 import { useRouter } from "next/navigation"
+import { MOCK_PACKAGES } from "@/lib/auth/simulated-auth"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface CustomerDashboardProps {
   user: any
@@ -32,14 +34,7 @@ export function CustomerDashboard({ user, profile }: CustomerDashboardProps) {
 
   const fetchPackages = async () => {
     try {
-      const { data, error } = await supabase
-        .from("packages")
-        .select("*")
-        .eq("sender_id", user.id)
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-      setPackages(data || [])
+      setPackages(MOCK_PACKAGES)
     } catch (error) {
       console.error("Error fetching packages:", error)
     } finally {
@@ -71,14 +66,13 @@ export function CustomerDashboard({ user, profile }: CustomerDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
-              <Package className="h-8 w-8 text-blue-600" />
+              <PackageOpenIcon className="h-8 w-8 text-blue-600 bg-[rgba(255,255,255,1)]" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">LogiTrack</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Pegasus</h1>
                 <p className="text-sm text-gray-600">Customer Dashboard</p>
               </div>
             </div>
@@ -103,7 +97,6 @@ export function CustomerDashboard({ user, profile }: CustomerDashboardProps) {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -149,7 +142,6 @@ export function CustomerDashboard({ user, profile }: CustomerDashboardProps) {
           </Card>
         </div>
 
-        {/* Main Content */}
         <Tabs defaultValue="overview" className="space-y-6">
           <div className="flex justify-between items-center">
             <TabsList>
@@ -222,7 +214,6 @@ export function CustomerDashboard({ user, profile }: CustomerDashboardProps) {
         </Tabs>
       </main>
 
-      {/* Send Package Modal */}
       {showSendForm && (
         <SendPackageForm
           onClose={() => setShowSendForm(false)}

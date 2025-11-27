@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
 import { DriverDashboard } from "@/components/driver/driver-dashboard"
 
 export default async function DriverPage() {
@@ -21,5 +20,5 @@ export default async function DriverPage() {
     redirect("/auth/login")
   }
 
-  return <DriverDashboard user={data.user} profile={profile} />
+  return <DriverDashboard user={user} profile={profile} />
 }

@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
 import { SuperAdminDashboard } from "@/components/super-admin/super-admin-dashboard"
 
 export default async function SuperAdminPage() {
@@ -21,5 +20,5 @@ export default async function SuperAdminPage() {
     redirect("/auth/login")
   }
 
-  return <SuperAdminDashboard user={data.user} profile={profile} />
+  return <SuperAdminDashboard user={user} profile={profile} />
 }

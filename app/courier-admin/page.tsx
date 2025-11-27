@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
 import { CourierAdminDashboard } from "@/components/courier-admin/courier-admin-dashboard"
 
 export default async function CourierAdminPage() {
@@ -21,5 +20,5 @@ export default async function CourierAdminPage() {
     redirect("/auth/login")
   }
 
-  return <CourierAdminDashboard user={data.user} profile={profile} />
+  return <CourierAdminDashboard user={user} profile={profile} />
 }

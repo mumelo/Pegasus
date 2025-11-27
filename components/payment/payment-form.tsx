@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CreditCard, Lock } from "lucide-react"
+import { CreditCard, Lock, Smartphone } from "lucide-react"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface PaymentFormProps {
   amount: number
@@ -25,7 +26,6 @@ export function PaymentForm({ amount, onPaymentSuccess, onCancel }: PaymentFormP
     e.preventDefault()
     setIsProcessing(true)
 
-    // Simulate payment processing
     setTimeout(() => {
       const paymentId = `pay_${Date.now()}`
       onPaymentSuccess(paymentId, paymentMethod)

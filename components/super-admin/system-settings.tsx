@@ -23,11 +23,11 @@ export function SystemSettings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="platformName">Platform Name</Label>
-              <Input id="platformName" defaultValue="LogiTrack" />
+              <Input id="platformName" defaultValue="Pegasus" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="supportEmail">Support Email</Label>
-              <Input id="supportEmail" type="email" defaultValue="support@logitrack.com" />
+              <Input id="supportEmail" type="email" defaultValue="support@pegasus.com" />
             </div>
           </div>
 

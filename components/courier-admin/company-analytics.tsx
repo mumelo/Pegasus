@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { BarChart3, TrendingUp, Package, Users, DollarSign } from "lucide-react"
+import { formatCurrencySimple } from "@/lib/utils/currency"
 
 interface CompanyAnalyticsProps {
   packages: any[]
@@ -10,7 +11,6 @@ interface CompanyAnalyticsProps {
 }
 
 export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
-  // Calculate analytics
   const totalPackages = packages.length
   const deliveredPackages = packages.filter((pkg) => pkg.status === "delivered").length
   const pendingPackages = packages.filter((pkg) => pkg.status === "pending").length
@@ -26,13 +26,11 @@ export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
 
   const successRate = totalPackages > 0 ? (deliveredPackages / totalPackages) * 100 : 0
 
-  // Package type distribution
   const packageTypes = packages.reduce((acc, pkg) => {
     acc[pkg.package_type] = (acc[pkg.package_type] || 0) + 1
     return acc
   }, {})
 
-  // Monthly data (last 6 months)
   const monthlyData = []
   for (let i = 5; i >= 0; i--) {
     const date = new Date()
@@ -60,7 +58,6 @@ export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -80,7 +77,7 @@ export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
             <DollarSign className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">${averageDeliveryFee.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrencySimple(averageDeliveryFee)}</div>
             <p className="text-xs text-muted-foreground">per package</p>
           </CardContent>
         </Card>
@@ -100,13 +97,12 @@ export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrencySimple(totalRevenue)}</div>
             <p className="text-xs text-muted-foreground">from delivered packages</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Package Status Distribution */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -136,7 +132,6 @@ export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
         </CardContent>
       </Card>
 
-      {/* Package Types */}
       <Card>
         <CardHeader>
           <CardTitle>Package Types</CardTitle>
@@ -165,7 +160,6 @@ export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
         </CardContent>
       </Card>
 
-      {/* Monthly Performance */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -189,7 +183,7 @@ export function CompanyAnalytics({ packages, drivers }: CompanyAnalyticsProps) {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">Revenue</p>
-                    <p className="font-medium text-green-600">${month.revenue.toFixed(2)}</p>
+                    <p className="font-medium text-green-600">{formatCurrencySimple(month.revenue)}</p>
                   </div>
                 </div>
               </div>

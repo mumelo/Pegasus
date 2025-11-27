@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
 import { CustomerDashboard } from "@/components/customer/customer-dashboard"
 
 export default async function CustomerPage() {

@@ -1,13 +1,12 @@
 "use client"
 
 import { createClient } from "@/lib/supabase/client"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,18 +15,13 @@ export default function AuthCallbackPage() {
       const supabase = createClient()
       
       try {
-        // Get the code from URL parameters
-        const code = searchParams.get('code')
+        const { data, error } = await supabase.auth.getSession()
         
-        if (code) {
-          // Exchange the code for a session
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-          
-          if (error) {
-            console.error("Auth callback error:", error)
-            setError(error.message)
-            return
-          }
+        if (error) {
+          console.error("Auth callback error:", error)
+          setError(error.message)
+          return
+        }
 
           if (data.session?.user) {
             console.log("User authenticated:", data.session.user.id)
@@ -43,7 +37,7 @@ export default function AuthCallbackPage() {
             await new Promise((resolve) => setTimeout(resolve, 1000))
 
             const { data: profile, error: profileError } = await supabase
-              .from("user_profiles")
+              .from("profiles")
               .select("role")
               .eq("user_id", data.session.user.id)
               .single()
@@ -118,7 +112,7 @@ export default function AuthCallbackPage() {
     }
 
     handleAuthCallback()
-  }, [router, searchParams])
+  }, [router])
 
   if (loading) {
     return (
