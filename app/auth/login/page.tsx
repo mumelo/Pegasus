@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function LoginPage() {
@@ -24,12 +24,12 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      if (error) throw error
+      if (signInError) throw signInError
 
       // Get user session to determine redirect from user metadata
       const {
