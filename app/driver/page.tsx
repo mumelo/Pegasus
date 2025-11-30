@@ -1,24 +1,22 @@
 "use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { DriverDashboard } from "@/components/driver/driver-dashboard"
+import { SimulatedAuth } from "@/lib/auth/simulated-auth"
 
-export default async function DriverPage() {
-  const supabase = await createClient()
+export default function DriverPage() {
+  const router = useRouter()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
-  }
+  useEffect(() => {
+    const user = SimulatedAuth.getCurrentUser()
+    if (!user || user.role !== "driver") {
+      router.push("/auth/login")
+    }
+  }, [router])
 
-  // Verify user role
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("role, full_name, company_id")
-    .eq("user_id", data.user.id)
-    .single()
+  const user = SimulatedAuth.getCurrentUser()
+  if (!user || user.role !== "driver") return null
 
-  if (!profile || profile.role !== "driver") {
-    redirect("/auth/login")
-  }
-
-  return <DriverDashboard user={user} profile={profile} />
+  return <DriverDashboard user={user} profile={user} />
 }

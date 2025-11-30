@@ -1,24 +1,22 @@
 "use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { SuperAdminDashboard } from "@/components/super-admin/super-admin-dashboard"
+import { SimulatedAuth } from "@/lib/auth/simulated-auth"
 
-export default async function SuperAdminPage() {
-  const supabase = await createClient()
+export default function SuperAdminPage() {
+  const router = useRouter()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
-  }
+  useEffect(() => {
+    const user = SimulatedAuth.getCurrentUser()
+    if (!user || user.role !== "super_admin") {
+      router.push("/auth/login")
+    }
+  }, [router])
 
-  // Verify user role
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("role, full_name")
-    .eq("user_id", data.user.id)
-    .single()
+  const user = SimulatedAuth.getCurrentUser()
+  if (!user || user.role !== "super_admin") return null
 
-  if (!profile || profile.role !== "super_admin") {
-    redirect("/auth/login")
-  }
-
-  return <SuperAdminDashboard user={user} profile={profile} />
+  return <SuperAdminDashboard user={user} profile={user} />
 }

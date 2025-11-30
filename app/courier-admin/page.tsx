@@ -1,24 +1,22 @@
 "use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { CourierAdminDashboard } from "@/components/courier-admin/courier-admin-dashboard"
+import { SimulatedAuth } from "@/lib/auth/simulated-auth"
 
-export default async function CourierAdminPage() {
-  const supabase = await createClient()
+export default function CourierAdminPage() {
+  const router = useRouter()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
-  }
+  useEffect(() => {
+    const user = SimulatedAuth.getCurrentUser()
+    if (!user || user.role !== "courier_admin") {
+      router.push("/auth/login")
+    }
+  }, [router])
 
-  // Verify user role
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("role, full_name, company_id")
-    .eq("user_id", data.user.id)
-    .single()
+  const user = SimulatedAuth.getCurrentUser()
+  if (!user || user.role !== "courier_admin") return null
 
-  if (!profile || profile.role !== "courier_admin") {
-    redirect("/auth/login")
-  }
-
-  return <CourierAdminDashboard user={user} profile={profile} />
+  return <CourierAdminDashboard user={user} profile={user} />
 }
