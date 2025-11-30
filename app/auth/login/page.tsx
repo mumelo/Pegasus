@@ -1,14 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { useState } from "react"
 
 export default function LoginPage() {
@@ -20,12 +19,13 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const supabase = createClient()
+      
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -54,7 +54,7 @@ export default function LoginPage() {
         }
       }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      setError(error instanceof Error ? error.message : "Invalid credentials")
     } finally {
       setIsLoading(false)
     }
@@ -65,7 +65,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">LogiTrack Login</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">Pegasus Login</CardTitle>
             <CardDescription className="text-gray-600">Access your logistics dashboard</CardDescription>
           </CardHeader>
           <CardContent>
@@ -93,11 +93,12 @@ export default function LoginPage() {
                 />
               </div>
               {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>}
+
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-            <div className="mt-6 text-center text-sm">
+            <div className="mt-6 text-center text-sm space-y-3">
               <span className="text-gray-600">Need an account? </span>
               <Link href="/auth/register" className="text-blue-600 hover:text-blue-700 font-medium">
                 Register here
